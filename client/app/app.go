@@ -52,8 +52,10 @@ func (app *App) initialize() {
 func (app *App) initializeRoutes() {
 	app.Router.HandleFunc("/status", app.status).Methods("GET")
 	app.Router.HandleFunc("/customers", app.getCustomers).Methods("GET")
-	app.Router.HandleFunc("/customers/{id:[a-zA-Z]+}", app.getCustomer).Methods("GET")
 	app.Router.HandleFunc("/customers", app.addCustomer).Methods("POST")
+	app.Router.HandleFunc("/customers", app.updateCustomer).Methods("PUT")
+	app.Router.HandleFunc("/customers/{id:[a-zA-Z]+}", app.getCustomer).Methods("GET")
+	app.Router.HandleFunc("/customers/{id:[a-zA-Z]+}", app.deleteCustomer).Methods("DELETE")
 }
 
 func (app *App) Run() {
@@ -92,7 +94,39 @@ func (app *App) addCustomer(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	// update services with new customer data
+	// go notifier.NotifyService()
 	respondWithJson(w, http.StatusCreated, customer)
+}
+
+func (app *App) deleteCustomer(w http.ResponseWriter, r *http.Request) {
+	var cust customer.Customer
+	log.Println("Deleting customer..")
+	vars := mux.Vars(r)
+	custId := vars["id"]
+	cust = customer.Customer{Id: custId}
+	if err := cust.DeleteCustomer(app.DB); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	// update services with new customer data
+	// go notifier.NotifyService()
+	respondWithJson(w, http.StatusAccepted, map[string]int{"status": http.StatusAccepted})
+}
+
+func (app *App) updateCustomer(w http.ResponseWriter, r *http.Request) {
+	var cust customer.Customer
+	log.Println("Deleting customer..")
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&cust); err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := cust.UpdateCustomer(app.DB); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJson(w, http.StatusAccepted, cust)
 }
 
 func (app *App) getCustomer(w http.ResponseWriter, r *http.Request) {

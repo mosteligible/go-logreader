@@ -42,16 +42,15 @@ func (cust *Customer) AddCustomer(db *sql.DB) error {
 }
 
 func (cust *Customer) UpdateCustomer(db *sql.DB) error {
-	_, err := db.Exec(
-		"UPDATE ? set name=?, plan=?, token=?",
-		config.CLIENT_DB_TABLE_NAME, cust.Name, cust.Plan, cust.token,
-	)
+	query := fmt.Sprintf("UPDATE %s set name=$1, plan=$2, token=$3", config.CLIENT_DB_TABLE_NAME)
+	_, err := db.Exec(query, cust.Name, cust.Plan, cust.token)
 
 	return err
 }
 
-func (cust *Customer) RemoveCustomer(db *sql.DB) error {
-	_, err := db.Query("DELETE FROM %s WHERE id=? LIMIT 1", cust.Id)
+func (cust *Customer) DeleteCustomer(db *sql.DB) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", config.CLIENT_DB_TABLE_NAME)
+	_, err := db.Query(query, cust.Id)
 
 	return err
 }
