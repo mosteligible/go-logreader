@@ -11,12 +11,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mosteligible/go-logreader/client/config"
+	"github.com/mosteligible/go-logreader/client/core/middlewares"
 	"github.com/mosteligible/go-logreader/client/customer"
 )
 
 type App struct {
-	Router *mux.Router
-	DB     *sql.DB
+	Router       *mux.Router
+	statusRouter *mux.Router
+	DB           *sql.DB
 }
 
 func NewApp() App {
@@ -51,11 +53,13 @@ func (app *App) initialize() {
 
 func (app *App) initializeRoutes() {
 	app.Router.HandleFunc("/status", app.status).Methods("GET")
-	app.Router.HandleFunc("/customers", app.getCustomers).Methods("GET")
-	app.Router.HandleFunc("/customers", app.addCustomer).Methods("POST")
-	app.Router.HandleFunc("/customers", app.updateCustomer).Methods("PUT")
-	app.Router.HandleFunc("/customers/{id:[a-zA-Z]+}", app.getCustomer).Methods("GET")
-	app.Router.HandleFunc("/customers/{id:[a-zA-Z]+}", app.deleteCustomer).Methods("DELETE")
+	prefixedRouter := app.Router.PathPrefix("/customers").Subrouter()
+	prefixedRouter.HandleFunc("", app.getCustomers).Methods("GET")
+	prefixedRouter.HandleFunc("", app.addCustomer).Methods("POST")
+	prefixedRouter.HandleFunc("", app.updateCustomer).Methods("PUT")
+	prefixedRouter.HandleFunc("/{id:[a-zA-Z]+}", app.getCustomer).Methods("GET")
+	prefixedRouter.HandleFunc("/{id:[a-zA-Z]+}", app.deleteCustomer).Methods("DELETE")
+	prefixedRouter.Use(middlewares.ApiKey)
 }
 
 func (app *App) Run() {
