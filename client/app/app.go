@@ -68,6 +68,7 @@ func (app *App) Run() {
 }
 
 func (app *App) status(w http.ResponseWriter, r *http.Request) {
+	log.Println("GET - /status - 200")
 	respondWithJson(w, http.StatusOK, map[string]int{"status": 200})
 }
 
@@ -84,14 +85,13 @@ func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
 
 func (app *App) addCustomer(w http.ResponseWriter, r *http.Request) {
 	var customer customer.Customer
-	log.Println("Adding customer..")
+	log.Println("POST - /customers ")
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&customer); err != nil {
 		log.Printf("Customer: %v", customer)
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Printf("noError Customer: %v", customer)
 	defer r.Body.Close()
 
 	if err := customer.AddCustomer(app.DB); err != nil {
@@ -105,7 +105,7 @@ func (app *App) addCustomer(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) deleteCustomer(w http.ResponseWriter, r *http.Request) {
 	var cust customer.Customer
-	log.Println("Deleting customer..")
+	log.Println("DELETE - /customers")
 	vars := mux.Vars(r)
 	custId := vars["id"]
 	cust = customer.Customer{Id: custId}
@@ -120,7 +120,7 @@ func (app *App) deleteCustomer(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) updateCustomer(w http.ResponseWriter, r *http.Request) {
 	var cust customer.Customer
-	log.Println("Deleting customer..")
+	log.Println("PUT - /customers")
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&cust); err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
@@ -136,6 +136,7 @@ func (app *App) updateCustomer(w http.ResponseWriter, r *http.Request) {
 func (app *App) getCustomer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	custId := vars["id"]
+	log.Printf("GET - /customers/%s", custId)
 	customer, err := customer.GetCustomer(app.DB, custId)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, err.Error())
@@ -145,6 +146,7 @@ func (app *App) getCustomer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) getCustomers(w http.ResponseWriter, r *http.Request) {
+	log.Println("GET - /customers")
 	customers, err := customer.GetAllCustomers(app.DB)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
