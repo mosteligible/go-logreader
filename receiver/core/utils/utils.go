@@ -36,6 +36,12 @@ func SetHeaders(req *http.Request, headers map[string]string) *http.Request {
 	return req
 }
 
+func LogFatalOnError(msg string, err error) {
+	if err != nil {
+		log.Panicf("Error: %s - %s", err.Error(), msg)
+	}
+}
+
 func SendRequest(
 	url string,
 	headers map[string]string,

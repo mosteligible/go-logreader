@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mosteligible/go-logreader/client/app"
+	"github.com/mosteligible/go-logreader/receiver/app"
 )
 
 func main() {
