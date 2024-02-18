@@ -6,6 +6,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
+
+	"github.com/mosteligible/go-logreader/receiver/core/broker"
 )
 
 type CommResponse struct {
@@ -88,4 +90,15 @@ func SendRequest(
 	res.Response = respond
 	res.Err = nil
 	response <- res
+}
+
+func SendMsgWithRetries(msg string, conn *broker.Connection) error {
+	var err error = nil
+	for i := 0; i < 10; i++ {
+		if err = conn.Send(msg); err != nil {
+			continue
+		}
+		break
+	}
+	return err
 }
