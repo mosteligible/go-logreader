@@ -21,8 +21,8 @@ func (c *Client) Validate() (bool, error) {
 	var responseComm = make(chan utils.CommResponse)
 	var communicatedResponse utils.CommResponse
 	var res *http.Response
-	endpoint := fmt.Sprintf("%s/customers/%s", config.CLIENT_DATA_ENDPOINT, c.Id)
-	headers := map[string]string{"api-key": config.CLIENT_DATA_API_KEY}
+	endpoint := fmt.Sprintf("%s/customers/%s", config.Env.ClientDataEndpoint, c.Id)
+	headers := map[string]string{"api-key": config.Env.ClientDataApiKey}
 
 	fmt.Println("Starting goroutine..")
 	go utils.SendRequest(endpoint, headers, http.MethodGet, nil, responseComm)
