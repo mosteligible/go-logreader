@@ -11,10 +11,12 @@ import (
 )
 
 type Client struct {
-	Id   string
-	Plan string
-	Name string
-	Ip   string
+	Id    string
+	Plan  string
+	Name  string
+	Ip    string
+	Token string
+	Event string
 }
 
 func (c *Client) Validate() (bool, error) {
@@ -50,7 +52,7 @@ func (c *Client) Validate() (bool, error) {
 
 func (c *Client) String() string {
 	return fmt.Sprintf(
-		"Client(id: %s, name: %s, plan: %s)\n",
-		c.Id, c.Name, c.Plan,
+		"Client(id: %s, name: %s, plan: %s, token: %s, event: %s)\n",
+		c.Id, c.Name, c.Plan, c.Token, c.Event,
 	)
 }

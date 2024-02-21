@@ -12,7 +12,7 @@ func GetCustomer(db *sql.DB, id string) (Customer, error) {
 	customer := Customer{Id: id}
 	query := fmt.Sprintf(
 		"SELECT id, name, plan from %s where id = $1",
-		config.CLIENT_DB_TABLE_NAME,
+		config.Env.ClientDbTableName,
 	)
 	row := db.QueryRow(
 		query, id,
@@ -30,7 +30,7 @@ func GetCustomer(db *sql.DB, id string) (Customer, error) {
 func GetAllCustomers(db *sql.DB) ([]Customer, error) {
 	var allCustomers = []Customer{}
 
-	query := fmt.Sprintf("SELECT * from %s", config.CLIENT_DB_TABLE_NAME)
+	query := fmt.Sprintf("SELECT * from %s", config.Env.ClientDbTableName)
 	rows, err := db.Query(query)
 	defer rows.Close()
 

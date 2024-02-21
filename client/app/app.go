@@ -28,16 +28,16 @@ func NewApp() App {
 }
 
 func (app *App) initialize() {
-	if !config.SslOk {
-		config.DB_SSL_MODE = "disable"
+	if !config.Env.SslOk {
+		config.Env.DbSslMode = "disable"
 	}
 	db_conn_string := fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=%s host=%s",
-		config.CLIENT_DB_USERNAME,
-		config.CLIENT_DB_PASSWORD,
-		config.POSTGRES_DB,
-		config.DB_SSL_MODE,
-		config.CLIENT_DB_HOST,
+		config.Env.ClientDbUsername,
+		config.Env.ClientDbPassword,
+		config.Env.PostgresDb,
+		config.Env.DbSslMode,
+		config.Env.ClientDbHost,
 	)
 	var err error
 	app.DB, err = sql.Open("postgres", db_conn_string)
@@ -63,8 +63,8 @@ func (app *App) initializeRoutes() {
 }
 
 func (app *App) Run() {
-	log.Printf("Listening in port: %s\n", config.APP_PORT)
-	log.Fatal(http.ListenAndServe(config.APP_PORT, app.Router))
+	log.Printf("Listening in port: %s\n", config.Env.AppPort)
+	log.Fatal(http.ListenAndServe(config.Env.AppPort, app.Router))
 }
 
 func (app *App) status(w http.ResponseWriter, r *http.Request) {

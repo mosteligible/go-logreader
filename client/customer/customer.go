@@ -31,25 +31,25 @@ func (cust *Customer) AddCustomer(db *sql.DB) error {
 	cust.token = generateToken()
 	query := fmt.Sprintf(
 		"INSERT INTO %s(id, name, plan, token) VALUES($1, $2, $3, $4) RETURNING id, name, plan",
-		config.CLIENT_DB_TABLE_NAME,
+		config.Env.ClientDbTableName,
 	)
 	err := db.QueryRow(
 		query,
 		cust.Id, cust.Name, cust.Plan, cust.token,
 	).Scan(&cust.Id, &cust.Name, &cust.Plan)
-	log.Println("config.CLIENT_DB_TABLE_NAME:", config.CLIENT_DB_TABLE_NAME)
+	log.Println("config.CLIENT_DB_TABLE_NAME:", config.Env.ClientDbTableName)
 	return err
 }
 
 func (cust *Customer) UpdateCustomer(db *sql.DB) error {
-	query := fmt.Sprintf("UPDATE %s set name=$1, plan=$2, token=$3", config.CLIENT_DB_TABLE_NAME)
+	query := fmt.Sprintf("UPDATE %s set name=$1, plan=$2, token=$3", config.Env.ClientDbTableName)
 	_, err := db.Exec(query, cust.Name, cust.Plan, cust.token)
 
 	return err
 }
 
 func (cust *Customer) DeleteCustomer(db *sql.DB) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", config.CLIENT_DB_TABLE_NAME)
+	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", config.Env.ClientDbTableName)
 	_, err := db.Query(query, cust.Id)
 
 	return err

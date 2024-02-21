@@ -69,19 +69,6 @@ func (c *Connection) Connect() error {
 	return nil
 }
 
-func (c *Connection) BindQueue() error {
-	for _, q := range c.Queues {
-		if _, err := c.Channel.QueueDeclare(q, true, false, false, false, nil); err != nil {
-			return fmt.Errorf("error in declaring the queue %s", err)
-		}
-		if err := c.Channel.QueueBind(q, c.ClientId, c.ClientId, false, nil); err != nil {
-			return fmt.Errorf("queue bind error: %s", err)
-		}
-	}
-
-	return nil
-}
-
 func (c *Connection) Reconnect() error {
 	if err := c.Connect(); err != nil {
 		return err

@@ -3,18 +3,14 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/mosteligible/go-logreader/receiver/core/broker"
+	"github.com/mosteligible/go-logreader/box/config"
+	"github.com/mosteligible/go-logreader/box/core/models"
 )
-
-type CommResponse struct {
-	Response *http.Response
-	Err      error
-}
 
 func RespondWithJson(w http.ResponseWriter, code int, message interface{}) {
 	response, _ := json.Marshal(message)
@@ -23,8 +19,8 @@ func RespondWithJson(w http.ResponseWriter, code int, message interface{}) {
 	w.Write(response)
 }
 
-func RespondWithError(w http.ResponseWriter, code int, message string, retjson bool) {
-	if !retjson {
+func RespondWithError(w http.ResponseWriter, code int, message string, json bool) {
+	if !json {
 		w.WriteHeader(code)
 		w.Write([]byte(message))
 	} else {
@@ -39,69 +35,68 @@ func SetHeaders(req *http.Request, headers map[string]string) *http.Request {
 	return req
 }
 
-func LogFatalOnError(msg string, err error) {
-	if err != nil {
-		log.Panicf("Error: %s - %s", err.Error(), msg)
-	}
-}
-
 func SendRequest(
 	url string,
 	headers map[string]string,
 	method string,
 	postBody *map[string]string,
-	response chan<- CommResponse,
-) {
+) (*http.Response, error) {
 	log.Printf("Initialization sending request to: %s", url)
 	client := &http.Client{}
 	var req *http.Request
-	var respond *http.Response
+	var response *http.Response
 	var err error
-	res := CommResponse{Err: errors.New("Unable to communicate to api")}
 	switch method {
 	case http.MethodGet:
 		req, err = http.NewRequest(method, url, nil)
 	case http.MethodPost:
 		var pb []byte
-		pb, err = json.Marshal(postBody)
+		pb, _ = json.Marshal(postBody)
 		req, err = http.NewRequest(method, url, bytes.NewBuffer(pb))
 	default:
 		panic("Only Supports GET or POST Requests!")
 	}
 	if err != nil {
 		log.Fatalf("error building request: %s\n", err.Error())
-		res.Err = err
-		response <- res
-		return
+		return nil, err
 	}
 
 	SetHeaders(req, headers)
-	respond, err = client.Do(req)
+	response, err = client.Do(req)
 	if err != nil {
 		log.Fatalf("error sending request: %s\n", err.Error())
-		res.Err = err
-		response <- res
-		return
+		return nil, err
 	}
-	if respond.StatusCode > 399 {
-		log.Fatalf("API: <%s> respoded with status code: <%d>", url, respond.StatusCode)
-		response <- res
-		return
+	if response.StatusCode > 399 {
+		log.Fatalf("API: <%s> respoded with status code: <%d>", url, response.StatusCode)
+		return nil, err
 	}
-	res.Response = respond
-	res.Err = nil
-	response <- res
+	return response, err
 }
 
-func SendMsgWithRetries(msg string, conn *broker.Connection) error {
-	var err error = nil
-	for i := 0; i < 10; i++ {
-		if err = conn.Send(msg); err != nil {
-			time.Sleep(1 * time.Second)
-			conn.Connect()
-			continue
-		}
-		break
+func ParseToStruct[T any](body io.Reader) []T {
+	var t []T
+	decoder := json.NewDecoder(body)
+	if err := decoder.Decode(&t); err != nil {
+		log.Fatalf("error decoding body into target")
 	}
-	return err
+	return t
+}
+
+func GetAllClients() []models.Customer {
+	var clients []models.Customer
+	headers := map[string]string{
+		"api-key": config.Env.ClientApiKey,
+	}
+	resp, err := SendRequest(
+		config.Env.ClienUrl, headers, http.MethodGet, nil,
+	)
+	if err != nil {
+		log.Fatalf("error fetching clientel list from %s", config.Env.ClienUrl)
+	}
+
+	clients = ParseToStruct[models.Customer](resp.Body)
+	fmt.Println("parse from json clients:\n", clients)
+
+	return clients
 }
