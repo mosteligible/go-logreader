@@ -1,14 +1,47 @@
 package config
 
-import "os"
+import (
+	"log"
+	"os"
 
-var APP_PORT = os.Getenv("APP_PORT")
-var CLIENT_DB_USERNAME = os.Getenv("CLIENT_DB_USERNAME")
-var CLIENT_DB_PASSWORD = os.Getenv("CLIENT_DB_PASSWORD")
-var POSTGRES_DB = os.Getenv("POSTGRES_DB")
-var CLIENT_DB_HOST = os.Getenv("CLIENT_DB_HOST")
-var CLIENT_DB_PORT = os.Getenv("CLIENT_DB_PORT")
-var CLIENT_DB_TABLE_NAME = os.Getenv("CLIENT_DB_TABLE_NAME")
-var DB_SSL_MODE, SslOk = os.LookupEnv("DB_SSL_MODE")
-var PROJ_DIR, _ = os.Getwd()
-var CUSTOMER_READ_API_KEY = os.Getenv("CUSTOMER_READ_API_KEY")
+	"github.com/joho/godotenv"
+)
+
+type Environment struct {
+	AppPort            string
+	ClientDbUsername   string
+	ClientDbPassword   string
+	ClientDbHost       string
+	ClientDbPort       string
+	ClientDbTableName  string
+	DbSslMode          string
+	SslOk              bool
+	PostgresDb         string
+	ProjDir            string
+	CustomerReadApiKey string
+}
+
+func newEnvironment() Environment {
+	e := Environment{}
+	e.Load()
+	return e
+}
+
+func (e *Environment) Load() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error trying to read from .env file, continuing with system env vars..")
+	}
+	e.AppPort = os.Getenv("APP_PORT")
+	e.ClientDbUsername = os.Getenv("CLIENT_DB_USERNAME")
+	e.ClientDbPassword = os.Getenv("CLIENT_DB_PASSWORD")
+	e.PostgresDb = os.Getenv("POSTGRES_DB")
+	e.ClientDbHost = os.Getenv("CLIENT_DB_HOST")
+	e.ClientDbPort = os.Getenv("CLIENT_DB_PORT")
+	e.ClientDbTableName = os.Getenv("CLIENT_DB_TABLE_NAME")
+	e.DbSslMode, e.SslOk = os.LookupEnv("DB_SSL_MODE")
+	e.ProjDir, _ = os.Getwd()
+	e.CustomerReadApiKey = os.Getenv("CUSTOMER_READ_API_KEY")
+}
+
+var Env = newEnvironment()

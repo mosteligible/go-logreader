@@ -28,16 +28,16 @@ func NewApp() App {
 }
 
 func (app *App) initialize() {
-	if !config.SslOk {
-		config.DB_SSL_MODE = "disable"
+	if !config.Env.SslOk {
+		config.Env.DbSslMode = "disable"
 	}
 	db_conn_string := fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=%s host=%s",
-		config.CLIENT_DB_USERNAME,
-		config.CLIENT_DB_PASSWORD,
-		config.POSTGRES_DB,
-		config.DB_SSL_MODE,
-		config.CLIENT_DB_HOST,
+		config.Env.ClientDbUsername,
+		config.Env.ClientDbPassword,
+		config.Env.PostgresDb,
+		config.Env.DbSslMode,
+		config.Env.ClientDbHost,
 	)
 	var err error
 	app.DB, err = sql.Open("postgres", db_conn_string)
@@ -63,11 +63,12 @@ func (app *App) initializeRoutes() {
 }
 
 func (app *App) Run() {
-	log.Printf("Listening in port: %s\n", config.APP_PORT)
-	log.Fatal(http.ListenAndServe(config.APP_PORT, app.Router))
+	log.Printf("Listening in port: %s\n", config.Env.AppPort)
+	log.Fatal(http.ListenAndServe(config.Env.AppPort, app.Router))
 }
 
 func (app *App) status(w http.ResponseWriter, r *http.Request) {
+	log.Println("GET - /status - 200")
 	respondWithJson(w, http.StatusOK, map[string]int{"status": 200})
 }
 
@@ -84,14 +85,13 @@ func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
 
 func (app *App) addCustomer(w http.ResponseWriter, r *http.Request) {
 	var customer customer.Customer
-	log.Println("Adding customer..")
+	log.Println("POST - /customers ")
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&customer); err != nil {
 		log.Printf("Customer: %v", customer)
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Printf("noError Customer: %v", customer)
 	defer r.Body.Close()
 
 	if err := customer.AddCustomer(app.DB); err != nil {
@@ -105,7 +105,7 @@ func (app *App) addCustomer(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) deleteCustomer(w http.ResponseWriter, r *http.Request) {
 	var cust customer.Customer
-	log.Println("Deleting customer..")
+	log.Println("DELETE - /customers")
 	vars := mux.Vars(r)
 	custId := vars["id"]
 	cust = customer.Customer{Id: custId}
@@ -120,7 +120,7 @@ func (app *App) deleteCustomer(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) updateCustomer(w http.ResponseWriter, r *http.Request) {
 	var cust customer.Customer
-	log.Println("Deleting customer..")
+	log.Println("PUT - /customers")
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&cust); err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
@@ -136,6 +136,7 @@ func (app *App) updateCustomer(w http.ResponseWriter, r *http.Request) {
 func (app *App) getCustomer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	custId := vars["id"]
+	log.Printf("GET - /customers/%s", custId)
 	customer, err := customer.GetCustomer(app.DB, custId)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, err.Error())
@@ -145,6 +146,7 @@ func (app *App) getCustomer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) getCustomers(w http.ResponseWriter, r *http.Request) {
+	log.Println("GET - /customers")
 	customers, err := customer.GetAllCustomers(app.DB)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())

@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/mosteligible/go-logreader/client/config"
+	"github.com/mosteligible/go-logreader/receiver/config"
 )
 
 func ApiKey(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		api_key := r.Header.Get("api-key")
-		if api_key != config.Env.CustomerReadApiKey {
+		if api_key != config.Env.ClientDataApiKey {
 			log.Printf("forbidden header api-key: %s\n", r.Header.Get("api-key"))
 
 			http.Error(w, "Forbidded api-key", http.StatusForbidden)
