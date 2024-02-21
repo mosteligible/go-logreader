@@ -11,7 +11,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mosteligible/go-logreader/client/config"
+	"github.com/mosteligible/go-logreader/client/constants"
 	"github.com/mosteligible/go-logreader/client/core/middlewares"
+	"github.com/mosteligible/go-logreader/client/core/notifier"
 	"github.com/mosteligible/go-logreader/client/customer"
 )
 
@@ -99,7 +101,18 @@ func (app *App) addCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// update services with new customer data
-	// go notifier.NotifyService()
+	go notifier.NotifyService(
+		config.Env.BoxSvcEndpoint,
+		customer,
+		map[string]string{"api-key": config.Env.BoxUpdApiKey},
+		constants.ClientAdded,
+	)
+	go notifier.NotifyService(
+		config.Env.ReceiverSvcEndpoint,
+		customer,
+		map[string]string{"api-key": config.Env.ReceiverUpdApiKey},
+		constants.ClientAdded,
+	)
 	respondWithJson(w, http.StatusCreated, customer)
 }
 
@@ -114,7 +127,18 @@ func (app *App) deleteCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// update services with new customer data
-	// go notifier.NotifyService()
+	go notifier.NotifyService(
+		config.Env.BoxSvcEndpoint,
+		cust,
+		map[string]string{"api-key": config.Env.BoxUpdApiKey},
+		constants.ClientRemoved,
+	)
+	go notifier.NotifyService(
+		config.Env.ReceiverSvcEndpoint,
+		cust,
+		map[string]string{"api-key": config.Env.ReceiverUpdApiKey},
+		constants.ClientRemoved,
+	)
 	respondWithJson(w, http.StatusAccepted, map[string]int{"status": http.StatusAccepted})
 }
 
@@ -130,6 +154,18 @@ func (app *App) updateCustomer(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	go notifier.NotifyService(
+		config.Env.BoxSvcEndpoint,
+		cust,
+		map[string]string{"api-key": config.Env.BoxUpdApiKey},
+		constants.ClientUpdated,
+	)
+	go notifier.NotifyService(
+		config.Env.ReceiverSvcEndpoint,
+		cust,
+		map[string]string{"api-key": config.Env.ReceiverUpdApiKey},
+		constants.ClientUpdated,
+	)
 	respondWithJson(w, http.StatusAccepted, cust)
 }
 

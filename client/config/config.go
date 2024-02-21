@@ -8,17 +8,21 @@ import (
 )
 
 type Environment struct {
-	AppPort            string
-	ClientDbUsername   string
-	ClientDbPassword   string
-	ClientDbHost       string
-	ClientDbPort       string
-	ClientDbTableName  string
-	DbSslMode          string
-	SslOk              bool
-	PostgresDb         string
-	ProjDir            string
-	CustomerReadApiKey string
+	AppPort             string
+	ClientDbUsername    string
+	ClientDbPassword    string
+	ClientDbHost        string
+	ClientDbPort        string
+	ClientDbTableName   string
+	DbSslMode           string
+	SslOk               bool
+	PostgresDb          string
+	ProjDir             string
+	CustomerReadApiKey  string
+	ReceiverSvcEndpoint string
+	ReceiverUpdApiKey   string
+	BoxSvcEndpoint      string
+	BoxUpdApiKey        string
 }
 
 func newEnvironment() Environment {
@@ -42,6 +46,8 @@ func (e *Environment) Load() {
 	e.DbSslMode, e.SslOk = os.LookupEnv("DB_SSL_MODE")
 	e.ProjDir, _ = os.Getwd()
 	e.CustomerReadApiKey = os.Getenv("CUSTOMER_READ_API_KEY")
+	e.ReceiverSvcEndpoint = os.Getenv("RECEIVER_SVC_ENDPOINT")
+	e.BoxSvcEndpoint = os.Getenv("BOX_SVC_ENDPOINT")
 }
 
 var Env = newEnvironment()
