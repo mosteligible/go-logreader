@@ -93,8 +93,9 @@ func (app *App) clientUpdates(w http.ResponseWriter, r *http.Request) {
 	case constants.ClientAdded:
 		fmt.Println("Actions for client added.. add connection to conn pool")
 		conn := broker.NewConnection(client.Id, client.Id, []string{})
-		conn.Connect()
-		broker.ConnectionPool[client.Id] = conn
+		if err := conn.Send("Starting.."); err != nil {
+			conn.Connect()
+		}
 	case constants.ClientRemoved:
 		fmt.Println("Actions for client deleted.. del connection to conn pool")
 		if _, ok := broker.ConnectionPool[client.Id]; !ok {
